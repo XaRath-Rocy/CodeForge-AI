@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=380" />
+  <title>CodeForge AI</title>
+  <link rel="stylesheet" href="popup.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+</head>
+
+<body>
+
+  <!-- Ambient background orbs -->
+  <div class="ambient-orb ambient-orb--primary" aria-hidden="true"></div>
+  <div class="ambient-orb ambient-orb--secondary" aria-hidden="true"></div>
+  <div class="ambient-orb ambient-orb--tertiary" aria-hidden="true"></div>
+
+  <div class="panel" id="panel">
+
+    <!-- ══ HEADER ══════════════════════════════════════════ -->
+    <header class="panel-header" data-animate="stagger" data-delay="0">
+      <div class="logo-group">
+        <div class="logo-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="url(#bolt-grad)" stroke-width="2.2" stroke-linecap="round"
+              stroke-linejoin="round" class="bolt-path" />
+            <defs>
+              <linearGradient id="bolt-grad" x1="3" y1="2" x2="21" y2="22">
+                <stop stop-color="#b0c6ff" />
+                <stop offset="1" stop-color="#568dff" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="logo-text-group">
+          <h1 class="logo-text">CodeForge <span class="logo-accent">AI</span></h1>
+          <span class="logo-tagline">Intelligent Code Forge</span>
+        </div>
+      </div>
+      <div class="header-meta">
+        <div class="status-dot" id="connection-dot" title="Server status">
+          <span class="status-dot-core"></span>
+        </div>
+        <span class="version-badge">v1.0</span>
+      </div>
+    </header>
+
+    <!-- ══ BODY ════════════════════════════════════════════ -->
+    <main class="panel-body">
+
+      <!-- ── Model + Language selectors ───────────────── -->
+      <div class="field-row" data-animate="stagger" data-delay="1">
+
+        <!-- AI Model selector -->
+        <div class="field" id="field-model">
+          <label class="field-label" id="model-label">
+            <svg class="field-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+            </svg>
+            AI Model
+          </label>
+          <!-- Custom trigger button — looks beautiful, JS opens the panel -->
+          <div class="csel-shell" id="model-shell">
+            <button class="csel-trigger" id="model-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"
+              aria-labelledby="model-label">
+              <span class="csel-dot" id="model-dot"></span>
+              <span class="csel-value" id="model-value">Loading…</span>
+              <svg class="csel-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+          </div>
+          <!-- Hidden select stores selected value (populated and read by JS) -->
+          <select id="model-select" style="display: none;"></select>
+        </div>
+
+        <!-- Language selector -->
+        <div class="field" id="field-language">
+          <label class="field-label" id="lang-label">
+            <svg class="field-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg>
+            Language
+          </label>
+          <div class="csel-shell" id="language-shell">
+            <button class="csel-trigger" id="language-trigger" type="button" aria-haspopup="listbox"
+              aria-expanded="false" aria-labelledby="lang-label">
+              <!-- Code icon for language -->
+              <svg class="csel-lang-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6" />
+                <polyline points="8 6 2 12 8 18" />
+              </svg>
+              <span class="csel-value" id="language-value">Loading…</span>
+              <svg class="csel-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+          </div>
+          <select id="language-select" style="display: none;"></select>
+        </div>
+
+      </div>
+
+      <!-- ── Instructions textarea — glass card ────────── -->
+      <div class="glass-card" data-animate="stagger" data-delay="2">
+        <div class="field" id="field-instructions">
+          <label class="field-label" for="instructions">
+            <svg class="field-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="21" y1="6" x2="3" y2="6" />
+              <line x1="21" y1="10" x2="3" y2="10" />
+              <line x1="17" y1="14" x2="3" y2="14" />
+              <line x1="17" y1="18" x2="3" y2="18" />
+            </svg>
+            Instructions
+            <span class="char-counter" id="char-counter">0 / 2000</span>
+          </label>
+          <textarea id="instructions" class="textarea" placeholder="Describe the code you want to generate…"
+            maxlength="2000" rows="5"></textarea>
+        </div>
+      </div>
+
+      <!-- ── AI Suggestion Chips ────────────────────────── -->
+      <div class="chip-row" data-animate="stagger" data-delay="3">
+        <button class="chip" type="button" data-prompt="Create a REST API with full CRUD operations">REST API</button>
+        <button class="chip" type="button" data-prompt="Build a responsive navbar with mobile menu">Navbar</button>
+        <button class="chip" type="button" data-prompt="Write comprehensive unit tests for the current code">Unit
+          Tests</button>
+        <button class="chip" type="button"
+          data-prompt="Add JWT authentication middleware with refresh tokens">Auth</button>
+      </div>
+
+      <!-- ── Status bar ─────────────────────────────────── -->
+      <div class="status-bar" id="status-bar" aria-live="polite">
+        <div class="status-bar-inner" id="status-bar-inner"></div>
+      </div>
+
+      <!-- ══ FORGE BUTTON  ═════════════════════════════ -->
+      <div class="fbtn" data-animate="stagger" data-delay="4">
+        <div class="btn-wrapper">
+          <button class="btn">
+            <svg class="btn-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z">
+              </path>
+            </svg>
+
+            <div class="txt-wrapper">
+              <div class="txt-1">
+                <span class="btn-letter">G</span>
+                <span class="btn-letter">e</span>
+                <span class="btn-letter">n</span>
+                <span class="btn-letter">e</span>
+                <span class="btn-letter">r</span>
+                <span class="btn-letter">a</span>
+                <span class="btn-letter">t</span>
+                <span class="btn-letter">e</span>
+              </div>
+              <div class="txt-2">
+                <span class="btn-letter">G</span>
+                <span class="btn-letter">e</span>
+                <span class="btn-letter">n</span>
+                <span class="btn-letter">e</span>
+                <span class="btn-letter">r</span>
+                <span class="btn-letter">a</span>
+                <span class="btn-letter">t</span>
+                <span class="btn-letter">i</span>
+                <span class="btn-letter">n</span>
+                <span class="btn-letter">g</span>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </main>
+
+
+    <!-- ══ META FOOTER ════════════════════════════════════ -->
+    <div class="meta-footer" data-animate="stagger" data-delay="5">
+      <span class="meta-footer-brand">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="url(#mf-g)" />
+          <defs>
+            <linearGradient id="mf-g" x1="3" y1="2" x2="21" y2="22">
+              <stop stop-color="#b0c6ff" />
+              <stop offset="1" stop-color="#568dff" />
+            </linearGradient>
+          </defs>
+        </svg>
+        CodeForge AI
+      </span>
+      <div class="meta-footer-actions">
+        <button class="meta-btn" id="btn-about" type="button" title="About">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          About
+        </button>
+        <span class="meta-divider" aria-hidden="true"></span>
+        <button class="meta-btn" id="btn-credits" type="button" title="Credits">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+          Credits
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ INFO SHEET ═════════════════════════════════════ -->
+    <div class="info-sheet" id="info-sheet" aria-hidden="true">
+      <div class="info-sheet-handle" aria-hidden="true"></div>
+      <div class="info-sheet-header">
+        <span class="info-sheet-title" id="info-sheet-title">About</span>
+        <button class="info-sheet-close" id="info-sheet-close" type="button" aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- About content -->
+      <div class="info-content" id="content-about">
+        <div class="info-hero">
+          <div class="info-hero-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="url(#ai)" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <defs>
+                <linearGradient id="ai" x1="3" y1="2" x2="21" y2="22">
+                  <stop stop-color="#b0c6ff" />
+                  <stop offset="1" stop-color="#568dff" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div>
+            <div class="info-hero-title">CodeForge AI</div>
+            <div class="info-hero-sub">Version 1.0.0 · Manifest V3</div>
+          </div>
+        </div>
+        <p class="info-desc">
+          AI-powered browser extension that generates production-ready code
+          and injects it directly into online editors — Monaco, Ace,
+          CodeMirror, and more. No API keys stored client-side.
+        </p>
+        <div class="info-tag-row">
+          <span class="info-tag info-tag--blue">Zero Client-Side Keys</span>
+          <span class="info-tag info-tag--cyan">MAIN World Injection</span>
+          <span class="info-tag info-tag--violet">1000+ Parallel Users</span>
+        </div>
+        <div class="info-stat-row">
+          <div class="info-stat">
+            <div class="info-stat-value">8</div>
+            <div class="info-stat-label">AI Models</div>
+          </div>
+          <div class="info-stat">
+            <div class="info-stat-value">15</div>
+            <div class="info-stat-label">Languages</div>
+          </div>
+          <div class="info-stat">
+            <div class="info-stat-value">5</div>
+            <div class="info-stat-label">Editor Types</div>
+          </div>
+        </div>
+        <div class="info-link-row">
+          <a class="info-link" href="https://api.yourdomain.com/docs" target="_blank" rel="noopener">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+            Docs
+          </a>
+          <a class="info-link" href="https://github.com/yourusername/codeforge-ai" target="_blank" rel="noopener">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+
+      <!-- Credits content -->
+      <div class="info-content" id="content-credits" style="display:none">
+        <div class="credits-list">
+          <div class="credit-item">
+            <div class="credit-avatar credit-avatar--blue">X</div>
+            <div class="credit-info">
+              <div class="credit-name">XaRath-Rocy</div>
+              <div class="credit-role">Creator &amp; Lead Developer</div>
+            </div>
+          </div>
+          <div class="credits-divider"></div>
+          <div class="credit-section-title">Powered By</div>
+          <div class="credit-item credit-item--small">
+            <div class="credit-logo" style="background:#76b900">NV</div>
+            <div class="credit-info">
+              <div class="credit-name">NVIDIA NIM</div>
+              <div class="credit-role">AI model gateway &amp; hosting</div>
+            </div>
+          </div>
+          <div class="credit-item credit-item--small">
+            <div class="credit-logo" style="background:#0668e1">MT</div>
+            <div class="credit-info">
+              <div class="credit-name">Meta Llama</div>
+              <div class="credit-role">Reasoning models (3.3 &amp; 3.1)</div>
+            </div>
+          </div>
+          <div class="credit-item credit-item--small">
+            <div class="credit-logo" style="background:#00a4ef">MS</div>
+            <div class="credit-info">
+              <div class="credit-name">Microsoft Phi-4</div>
+              <div class="credit-role">Latency-optimized small model</div>
+            </div>
+          </div>
+          <div class="credit-item credit-item--small">
+            <div class="credit-logo" style="background:#fbbf24">GG</div>
+            <div class="credit-info">
+              <div class="credit-name">Google Gemma 2</div>
+              <div class="credit-role">Edge-optimized chat model</div>
+            </div>
+          </div>
+          <div class="credit-item credit-item--small">
+            <div class="credit-logo" style="background:#ff5e00">MA</div>
+            <div class="credit-info">
+              <div class="credit-name">Mistral AI</div>
+              <div class="credit-role">High-performance Mixtral MoE</div>
+            </div>
+          </div>
+          <div class="credits-divider"></div>
+          <div class="credit-section-title">Design</div>
+          <div class="credit-item credit-item--small">
+            <div class="credit-logo credit-logo--lumina">FL</div>
+            <div class="credit-info">
+              <div class="credit-name">Forge Lumina</div>
+              <div class="credit-role">Glassmorphism design system</div>
+            </div>
+          </div>
+        </div>
+        <div class="credits-footer-note">Built with ❤ · MIT License · © 2026 XaRath-Rocy</div>
+      </div>
+    </div>
+
+    <!-- Info sheet backdrop -->
+    <div class="info-sheet-backdrop" id="info-backdrop"></div>
+
+  </div><!-- /.panel -->
+
+  <script src="config.js"></script>
+  <script src="popup.js"></script>
+</body>
+
+</html>
