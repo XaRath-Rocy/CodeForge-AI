@@ -34,20 +34,123 @@ const CONFIG = Object.freeze({
    * The server can expand or remap these as needed.
    */
   LANGUAGES: Object.freeze([
-    { id: 'javascript',   label: 'JavaScript' },
-    { id: 'typescript',   label: 'TypeScript' },
-    { id: 'python',       label: 'Python' },
-    { id: 'java',         label: 'Java' },
-    { id: 'csharp',       label: 'C#' },
-    { id: 'cpp',          label: 'C++' },
-    { id: 'go',           label: 'Go' },
-    { id: 'rust',         label: 'Rust' },
-    { id: 'ruby',         label: 'Ruby' },
-    { id: 'php',          label: 'PHP' },
-    { id: 'swift',        label: 'Swift' },
-    { id: 'kotlin',       label: 'Kotlin' },
-    { id: 'html',         label: 'HTML / CSS' },
-    { id: 'sql',          label: 'SQL' },
-    { id: 'bash',         label: 'Bash / Shell' },
+    // Programming Languages
+{ id: 'javascript', label: 'JavaScript' },
+{ id: 'typescript', label: 'TypeScript' },
+{ id: 'python', label: 'Python' },
+{ id: 'java', label: 'Java' },
+{ id: 'csharp', label: 'C#' },
+{ id: 'cpp', label: 'C++' },
+{ id: 'c', label: 'C' },
+{ id: 'go', label: 'Go' },
+{ id: 'rust', label: 'Rust' },
+{ id: 'ruby', label: 'Ruby' },
+{ id: 'php', label: 'PHP' },
+{ id: 'swift', label: 'Swift' },
+{ id: 'kotlin', label: 'Kotlin' },
+{ id: 'dart', label: 'Dart' },
+{ id: 'scala', label: 'Scala' },
+{ id: 'perl', label: 'Perl' },
+{ id: 'r', label: 'R' },
+{ id: 'matlab', label: 'MATLAB' },
+{ id: 'lua', label: 'Lua' },
+{ id: 'haskell', label: 'Haskell' },
+{ id: 'elixir', label: 'Elixir' },
+{ id: 'clojure', label: 'Clojure' },
+{ id: 'fsharp', label: 'F#' },
+{ id: 'objectivec', label: 'Objective-C' },
+{ id: 'assembly', label: 'Assembly' },
+{ id: 'fortran', label: 'Fortran' },
+{ id: 'cobol', label: 'COBOL' },
+
+// Web Technologies
+{ id: 'html', label: 'HTML' },
+{ id: 'css', label: 'CSS' },
+{ id: 'sass', label: 'SASS / SCSS' },
+{ id: 'less', label: 'LESS' },
+{ id: 'tailwind', label: 'Tailwind CSS' },
+{ id: 'bootstrap', label: 'Bootstrap' },
+
+// Frontend Frameworks
+{ id: 'react', label: 'React' },
+{ id: 'nextjs', label: 'Next.js' },
+{ id: 'vue', label: 'Vue.js' },
+{ id: 'nuxt', label: 'Nuxt.js' },
+{ id: 'angular', label: 'Angular' },
+{ id: 'svelte', label: 'Svelte' },
+{ id: 'solidjs', label: 'SolidJS' },
+
+// Backend Frameworks
+{ id: 'nodejs', label: 'Node.js' },
+{ id: 'express', label: 'Express.js' },
+{ id: 'nestjs', label: 'NestJS' },
+{ id: 'fastapi', label: 'FastAPI' },
+{ id: 'django', label: 'Django' },
+{ id: 'flask', label: 'Flask' },
+{ id: 'spring', label: 'Spring Boot' },
+{ id: 'laravel', label: 'Laravel' },
+{ id: 'aspnet', label: 'ASP.NET Core' },
+{ id: 'gin', label: 'Gin (Go)' },
+
+// Databases
+{ id: 'sql', label: 'SQL' },
+{ id: 'mysql', label: 'MySQL' },
+{ id: 'postgresql', label: 'PostgreSQL' },
+{ id: 'sqlite', label: 'SQLite' },
+{ id: 'mssql', label: 'SQL Server' },
+{ id: 'oracle', label: 'Oracle DB' },
+{ id: 'mongodb', label: 'MongoDB' },
+{ id: 'redis', label: 'Redis' },
+{ id: 'cassandra', label: 'Cassandra' },
+{ id: 'firebase', label: 'Firebase Firestore' },
+{ id: 'supabase', label: 'Supabase' },
+
+// Mobile Development
+{ id: 'android', label: 'Android' },
+{ id: 'ios', label: 'iOS' },
+{ id: 'reactnative', label: 'React Native' },
+{ id: 'flutter', label: 'Flutter' },
+{ id: 'xamarin', label: 'Xamarin' },
+
+// DevOps & Infrastructure
+{ id: 'docker', label: 'Docker' },
+{ id: 'kubernetes', label: 'Kubernetes' },
+{ id: 'terraform', label: 'Terraform' },
+{ id: 'ansible', label: 'Ansible' },
+{ id: 'jenkins', label: 'Jenkins' },
+{ id: 'githubactions', label: 'GitHub Actions' },
+{ id: 'nginx', label: 'Nginx' },
+
+// Cloud Platforms
+{ id: 'aws', label: 'AWS' },
+{ id: 'azure', label: 'Microsoft Azure' },
+{ id: 'gcp', label: 'Google Cloud' },
+{ id: 'cloudflare', label: 'Cloudflare' },
+{ id: 'vercel', label: 'Vercel' },
+{ id: 'netlify', label: 'Netlify' },
+
+// AI / Data Science
+{ id: 'machinelearning', label: 'Machine Learning' },
+{ id: 'deeplearning', label: 'Deep Learning' },
+{ id: 'tensorflow', label: 'TensorFlow' },
+{ id: 'pytorch', label: 'PyTorch' },
+{ id: 'opencv', label: 'OpenCV' },
+{ id: 'pandas', label: 'Pandas' },
+{ id: 'numpy', label: 'NumPy' },
+
+// Scripting & Automation
+{ id: 'bash', label: 'Bash' },
+{ id: 'powershell', label: 'PowerShell' },
+{ id: 'shell', label: 'Shell Script' },
+
+// Game Development
+{ id: 'unity', label: 'Unity' },
+{ id: 'unreal', label: 'Unreal Engine' },
+{ id: 'godot', label: 'Godot' },
+
+// Version Control
+{ id: 'git', label: 'Git' },
+{ id: 'github', label: 'GitHub' },
+{ id: 'gitlab', label: 'GitLab' },
   ]),
 });
