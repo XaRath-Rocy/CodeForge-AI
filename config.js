@@ -9,7 +9,7 @@
 const CONFIG = Object.freeze({
 
   /** Server gateway endpoint — the ONLY outbound destination */
-  SERVER_API_URL: 'https://api.yourdomain.com/v1/forge',
+  SERVER_API_URL: 'https://codeforge-ai-evpj.onrender.com/v1/forge',
 
   /** Request timeout in milliseconds (30 s) */
   REQUEST_TIMEOUT_MS: 30_000,

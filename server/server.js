@@ -7,6 +7,7 @@
  *  2. Forwards prompts to the NVIDIA NIM AI Chat Completions API.
  *  3. Strips markdown fences from the response.
  *  4. Returns clean { "code": "..." } JSON to the extension.
+ *  5. Saves persistent logs to `server.log` for requests, errors, and validation.
  *
  * Environment variables:
  *   NVIDIA_API_KEY      — Your NVIDIA NIM API key (REQUIRED)
@@ -22,14 +23,52 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+/* ── Logging Setup ────────────────────────────────────── */
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const logFilePath = path.join(__dirname, 'server.log');
+
+/**
+ * Write a formatted log line to both the console and server.log.
+ * 
+ * @param {'INFO'|'WARN'|'ERROR'} level 
+ * @param {string} message 
+ * @param {object|null} details 
+ */
+function logToFile(level, message, details = null) {
+  const timestamp = new Date().toISOString();
+  const detailStr = details ? ` | Details: ${JSON.stringify(details)}` : '';
+  const logLine = `[${timestamp}] [${level}] ${message}${detailStr}\n`;
+
+  // Output to standard console
+  if (level === 'ERROR') {
+    console.error(`[${timestamp}] [${level}] ${message}`, details || '');
+  } else if (level === 'WARN') {
+    console.warn(`[${timestamp}] [${level}] ${message}`, details || '');
+  } else {
+    console.log(`[${timestamp}] [${level}] ${message}`, details || '');
+  }
+
+  // Append to log file
+  fs.appendFile(logFilePath, logLine, (err) => {
+    if (err) {
+      console.error('❌ Failed to write to log file:', err);
+    }
+  });
+}
 
 /* ── Config ───────────────────────────────────────────── */
 
 const PORT = process.env.PORT || 3000;
 const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
 
-if (!NVIDIA_API_KEY) {
-  console.error('❌  NVIDIA_API_KEY environment variable is required.');
+if (!NVIDIA_API_KEY || NVIDIA_API_KEY === 'nvapi-YOUR_NVIDIA_API_KEY_HERE') {
+  logToFile('ERROR', 'NVIDIA_API_KEY environment variable is missing or placeholder value is used.');
   process.exit(1);
 }
 
@@ -69,7 +108,7 @@ app.use((req, res, next) => {
   if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
     next();
   } else {
-    console.warn(`[CORS Blocked] Origin: ${origin}`);
+    logToFile('WARN', 'CORS Blocked: origin not allowed', { origin });
     res.status(403).json({ error: 'CORS: origin not allowed' });
   }
 });
@@ -106,20 +145,30 @@ app.post('/v1/forge', async (req, res) => {
   try {
     const { model, language, instructions } = req.body;
 
+    logToFile('INFO', 'Generation request received', {
+      model,
+      language,
+      instructionsLength: instructions ? instructions.length : 0
+    });
+
     /* ── Validate ─────────────────────────────────── */
     if (!instructions || typeof instructions !== 'string' || instructions.trim().length === 0) {
+      logToFile('WARN', 'Validation failed: Missing or empty instructions');
       return res.status(400).json({ error: 'Missing or empty "instructions" field.' });
     }
 
     if (instructions.length > 5000) {
+      logToFile('WARN', 'Validation failed: Instructions exceed max length', { length: instructions.length });
       return res.status(400).json({ error: 'Instructions exceed maximum allowed length of 5000 characters.' });
     }
 
     if (language && (typeof language !== 'string' || language.length > 50)) {
+      logToFile('WARN', 'Validation failed: Invalid or excessively long language name', { language });
       return res.status(400).json({ error: 'Invalid or excessively long "language" field.' });
     }
 
     if (!model || !MODEL_MAP[model]) {
+      logToFile('WARN', 'Validation failed: Invalid model selection', { model });
       return res.status(400).json({
         error: `Invalid model "${model}". Supported: ${Object.keys(MODEL_MAP).join(', ')}`,
       });
@@ -143,6 +192,7 @@ app.post('/v1/forge', async (req, res) => {
     ]
 
     /* ── Call NVIDIA NIM ──────────────────────────── */
+    logToFile('INFO', 'Calling NVIDIA NIM API', { resolvedModel });
     const nimResponse = await fetch(NVIDIA_ENDPOINT, {
       method: 'POST',
       headers: {
@@ -159,7 +209,7 @@ app.post('/v1/forge', async (req, res) => {
 
     if (!nimResponse.ok) {
       const errText = await nimResponse.text().catch(() => 'Unknown upstream error');
-      console.error(`[NVIDIA NIM ${nimResponse.status}]`, errText);
+      logToFile('ERROR', `Upstream NVIDIA NIM returned error status ${nimResponse.status}`, { error: errText });
       return res.status(502).json({
         error: `Upstream AI provider error (${nimResponse.status}).`,
       });
@@ -171,16 +221,23 @@ app.post('/v1/forge', async (req, res) => {
     const rawContent = nimData?.choices?.[0]?.message?.content;
 
     if (!rawContent || typeof rawContent !== 'string') {
+      logToFile('ERROR', 'NVIDIA NIM API returned empty content choices');
       return res.status(502).json({ error: 'AI returned an empty response.' });
     }
 
     const cleanCode = stripMarkdownFences(rawContent);
 
+    logToFile('INFO', 'Code generated successfully', {
+      model,
+      language,
+      outputLength: cleanCode.length
+    });
+
     /* ── Respond ──────────────────────────────────── */
     return res.json({ code: cleanCode });
 
   } catch (err) {
-    console.error('[Forge Error]', err);
+    logToFile('ERROR', 'Unexpected server error during generation', { error: err.message, stack: err.stack });
     return res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -227,14 +284,14 @@ app.use((_req, res) => {
 /* ── Global error handler ─────────────────────────────── */
 
 app.use((err, _req, res, _next) => {
-  console.error('[Unhandled]', err);
+  logToFile('ERROR', 'Unhandled Express error', { error: err.message, stack: err.stack });
   res.status(500).json({ error: 'Internal server error.' });
 });
 
 /* ── Start ────────────────────────────────────────────── */
 
 app.listen(PORT, () => {
-  console.log(`\n⚡ CodeForge AI server running on port ${PORT}`);
+  logToFile('INFO', `CodeForge AI server running on port ${PORT}`);
   console.log(`   POST /v1/forge — main generation endpoint`);
   console.log(`   GET  /health   — health check\n`);
 });
