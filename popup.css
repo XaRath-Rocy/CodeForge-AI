@@ -36,15 +36,15 @@
   --success:            #14d1ff;
 
   /* Model palette */
-  --model-llama33:   #3b82f6;
-  --model-llama31:   #2563eb;
-  --model-llama31-8b:#60a5fa;
-  --model-llama32-3b:#93c5fd;
-  --model-llama32-1b:#bfdbfe;
-  --model-phi:       #00a4ef;
-  --model-gemma:     #fbbf24;
-  --model-mixtral:   #ff5e00;
-  --model-default:   #568dff;
+  --model-llama33:   #8d0202;
+  --model-llama31:   #7a8d02;
+  --model-llama31-8b:#8d0241;
+  --model-llama32-3b:#8d026f;
+  --model-llama32-1b:#028d09;
+  --model-phi:       #5f028d;
+  --model-gemma:     #024c8d;
+  --model-mixtral:   #028d8b;
+  --model-default:   #022e8d;
 
   --bg-input:       rgba(0,0,0,0.45);
   --bg-input-hover: rgba(0,0,0,0.52);
