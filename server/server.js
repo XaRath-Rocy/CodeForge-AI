@@ -182,8 +182,8 @@ app.post('/v1/forge', async (req, res) => {
       `Target language: ${language || 'auto-detect'}.`,
       `Return ONLY the raw code — no explanations, no markdown fences, no prose.`,
       `If the request is ambiguous, make reasonable assumptions and implement fully.`,
-      `Include necessary imports and exports based on the target language conventions.`,
-      `Generate Beginner-friendly code.`
+      `Generate highly beginner-friendly, clean, and well-structured code.`,
+      `Do NOT include exports or advanced modular wrapping unless explicitly requested.`
     ].join('\n');
 
     const messages = [

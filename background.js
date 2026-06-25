@@ -24,11 +24,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // keep the message channel open for async response
   }
 
+  if (message.action === 'CHECK_BACKEND') {
+    checkBackendStatus().then(sendResponse);
+    return true; // async
+  }
+
   if (message.action === 'PING') {
     sendResponse({ status: 'ok' });
     return false;
   }
 });
+
+async function checkBackendStatus() {
+  try {
+    const healthUrl = CONFIG.SERVER_API_URL.replace(/\/v1\/forge$/, '/health');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const response = await fetch(healthUrl, { signal: controller.signal });
+    clearTimeout(timeout);
+    return { success: response.ok };
+  } catch (err) {
+    console.warn('[CodeForge BG] Backend health check failed:', err.message);
+    return { success: false };
+  }
+}
 
 /* ── Core handler ────────────────────────────────────── */
 async function handleForgeRequest(payload, sendResponse) {

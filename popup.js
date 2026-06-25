@@ -93,7 +93,7 @@
     }
   }
 
-  function setupCustomDropdown(triggerId, selectId, items) {
+  function setupCustomDropdown(triggerId, selectId, items, hasSearch = false) {
     const triggerEl = document.getElementById(triggerId);
     const selectEl = document.getElementById(selectId);
     if (!triggerEl || !selectEl) return;
@@ -116,6 +116,59 @@
       panel.style.top = `${rect.bottom + 4}px`;
       panel.style.left = `${rect.left}px`;
       panel.style.width = `${rect.width}px`;
+
+      const optionsList = document.createElement('div');
+      optionsList.className = 'csel-options-list';
+
+      if (hasSearch) {
+        const searchContainer = document.createElement('div');
+        searchContainer.className = 'csel-search-container';
+
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'csel-search-input';
+        searchInput.placeholder = selectId.includes('model') ? 'Search model...' : 'Search language...';
+        searchInput.autocomplete = 'off';
+
+        searchInput.addEventListener('click', (se) => se.stopPropagation());
+
+        searchContainer.appendChild(searchInput);
+        panel.appendChild(searchContainer);
+
+        searchInput.addEventListener('input', (se) => {
+          const query = se.target.value.toLowerCase().trim();
+          const options = optionsList.querySelectorAll('.csel-option');
+          let visibleCount = 0;
+
+          options.forEach((opt) => {
+            const labelText = opt.querySelector('.csel-option-label').textContent.toLowerCase();
+            const descText = opt.querySelector('.csel-option-desc')?.textContent.toLowerCase() || '';
+            if (labelText.includes(query) || descText.includes(query)) {
+              opt.style.display = 'flex';
+              visibleCount++;
+            } else {
+              opt.style.display = 'none';
+            }
+          });
+
+          let noResultsEl = optionsList.querySelector('.csel-no-results');
+          if (visibleCount === 0) {
+            if (!noResultsEl) {
+              noResultsEl = document.createElement('div');
+              noResultsEl.className = 'csel-no-results';
+              noResultsEl.textContent = 'No matching options';
+              optionsList.appendChild(noResultsEl);
+            }
+          } else {
+            if (noResultsEl) {
+              noResultsEl.remove();
+            }
+          }
+        });
+
+        // Focus after panel is in the document
+        setTimeout(() => searchInput.focus(), 50);
+      }
 
       items.forEach((item) => {
         const opt = document.createElement('div');
@@ -163,8 +216,10 @@
           closeDropdown();
         });
 
-        panel.appendChild(opt);
+        optionsList.appendChild(opt);
       });
+
+      panel.appendChild(optionsList);
 
       document.body.appendChild(panel);
       activeDropdownPanel = panel;
@@ -185,7 +240,7 @@
 
   // Setup the dropdowns
   setupCustomDropdown('model-trigger', 'model-select', CONFIG.MODELS);
-  setupCustomDropdown('language-trigger', 'language-select', CONFIG.LANGUAGES);
+  setupCustomDropdown('language-trigger', 'language-select', CONFIG.LANGUAGES, true);
 
   function syncModelDisplay() {
     const selected = modelSelect.options[modelSelect.selectedIndex];
@@ -327,14 +382,14 @@
      BUTTON STATE
   ────────────────────────────────────────────────────────── */
   function setLoading(on) {
-    forgeBtn.disabled = on;
-    const iconSlot = forgeBtn.querySelector('.forge-btn-icon');
-    const textSlot = forgeBtn.querySelector('.forge-btn-text');
+    if (forgeBtn) forgeBtn.disabled = on;
+    const iconSlot = forgeBtn ? forgeBtn.querySelector('.forge-btn-icon') : null;
+    const textSlot = forgeBtn ? forgeBtn.querySelector('.forge-btn-text') : null;
 
     if (on) {
       if (iconSlot) iconSlot.innerHTML = '<div class="spinner"></div>';
       if (textSlot) textSlot.textContent = 'Forging…';
-      forgeProgress.classList.add('active');
+      if (forgeProgress) forgeProgress.classList.add('active');
     } else {
       if (iconSlot) {
         iconSlot.innerHTML = `
@@ -343,7 +398,7 @@
           </svg>`;
       }
       if (textSlot) textSlot.textContent = 'Forge System Code';
-      forgeProgress.classList.remove('active');
+      if (forgeProgress) forgeProgress.classList.remove('active');
     }
   }
 
@@ -351,7 +406,7 @@
   const pulseRing = document.createElement('span');
   pulseRing.className = 'pulse-ring';
   pulseRing.setAttribute('aria-hidden', 'true');
-  forgeBtn.appendChild(pulseRing);
+  if (forgeBtn) forgeBtn.appendChild(pulseRing);
 
   /* ─────────────────────────────────────────────────────────
      VALIDATION SHAKE
@@ -439,5 +494,17 @@
   ────────────────────────────────────────────────────────── */
   updateCharCounter();
   clearStatus();
+
+  // Perform initial health check to backend
+  setDotState('offline'); // start as offline/checking
+  chrome.runtime.sendMessage({ action: 'CHECK_BACKEND' }, (response) => {
+    if (chrome.runtime.lastError || !response || !response.success) {
+      setDotState('offline');
+      setStatus('⚠ Server offline. Please run the backend server.', 'error');
+    } else {
+      setDotState('ok');
+      clearStatus();
+    }
+  });
 
 })();

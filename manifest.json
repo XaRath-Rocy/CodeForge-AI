@@ -21,7 +21,7 @@
     "scripting"
   ],
   "host_permissions": [
-    "https://codeforge-ai-evpj.onrender.com/*",
+    "http://localhost:3000/*",
     "https://onecompiler.com/*",
     "https://*.replit.com/*",
     "https://jsfiddle.net/*",
