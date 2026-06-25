@@ -79,13 +79,13 @@ const NVIDIA_ENDPOINT = 'https://integrate.api.nvidia.com/v1/chat/completions';
  * we resolve it to the provider-specific model identifier.
  */
 const MODEL_MAP = {
-  'llama-3.3-70b-instruct':     'meta/llama-3.3-70b-instruct',
-  'llama-3.1-70b-instruct':     'meta/llama-3.1-70b-instruct',
-  'llama-3.1-8b-instruct':      'meta/llama-3.1-8b-instruct',
-  'llama-3.2-3b-instruct':      'meta/llama-3.2-3b-instruct',
-  'llama-3.2-1b-instruct':      'meta/llama-3.2-1b-instruct',
-  'phi-4-mini-instruct':        'microsoft/phi-4-mini-instruct',
-  'gemma-2-2b-it':              'google/gemma-2-2b-it',
+  'llama-3.3-70b-instruct': 'meta/llama-3.3-70b-instruct',
+  'llama-3.1-70b-instruct': 'meta/llama-3.1-70b-instruct',
+  'llama-3.1-8b-instruct': 'meta/llama-3.1-8b-instruct',
+  'llama-3.2-3b-instruct': 'meta/llama-3.2-3b-instruct',
+  'llama-3.2-1b-instruct': 'meta/llama-3.2-1b-instruct',
+  'phi-4-mini-instruct': 'microsoft/phi-4-mini-instruct',
+  'gemma-2-2b-it': 'google/gemma-2-2b-it',
   'mixtral-8x7b-instruct-v0.1': 'mistralai/mixtral-8x7b-instruct-v0.1',
 };
 
@@ -104,7 +104,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 /* CORS validation middleware */
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  
+
   if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
     next();
   } else {
@@ -178,12 +178,20 @@ app.post('/v1/forge', async (req, res) => {
 
     /* ── Build prompt ─────────────────────────────── */
     const systemPrompt = [
-      `You are an expert software engineer. Generate clean, production-ready code.`,
       `Target language: ${language || 'auto-detect'}.`,
-      `Return ONLY the raw code — no explanations, no markdown fences, no prose.`,
-      `If the request is ambiguous, make reasonable assumptions and implement fully.`,
-      `Generate highly beginner-friendly, clean, and well-structured code.`,
-      `Do NOT include exports or advanced modular wrapping unless explicitly requested.`
+      `Generate beginner-level code only.
+
+      Rules:
+      - Return only code.
+      - No comments.
+      - No explanations.
+      - Keep code simple and short.
+      - Follow the user's request exactly.
+      - Do not add extra functions or methods unless explicitly requested or required by the language.
+      - Do not wrap code inside main(), classes, or functions unless required by the selected language or requested by the user.
+      - Avoid advanced programming concepts.
+      - Write code suitable for first-year practical exams.
+      `,
     ].join('\n');
 
     const messages = [
