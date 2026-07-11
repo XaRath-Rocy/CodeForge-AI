@@ -16,6 +16,24 @@
   /* Prevent double-injection */
   if (window.__CODEFORGE__) return;
 
+  window.__CODEFORGE__ = {
+  detectEditorInstance: function() {
+    // Sirf DOM textareas ya active elements ko hi nahi, balki common editor targets ko target karein
+    let targetEl = document.activeElement;
+    
+    // Agar Monaco ya CodeMirror ki active lines hain toh unhe evaluate karein
+    const monacoLine = document.querySelector('.view-line');
+    const codeMirrorLine = document.querySelector('.cm-content');
+    
+    if (codeMirrorLine) return { type: 'CodeMirror', el: codeMirrorLine };
+    if (monacoLine) return { type: 'Monaco', el: monacoLine };
+    if (targetEl && (targetEl.tagName === 'TEXTAREA' || targetEl.getAttribute('contenteditable') === 'true')) {
+      return { type: 'Generic', el: targetEl };
+    }
+    return null;
+  }
+};
+
   // ─── Detection helpers ──────────────────────────────────────
 
   /**

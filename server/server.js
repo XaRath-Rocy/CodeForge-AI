@@ -32,6 +32,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const logFilePath = path.join(__dirname, 'server.log');
+const logStream = fs.createWriteStream(logFilePath, { flags: 'a' });
 
 /**
  * Write a formatted log line to both the console and server.log.
@@ -55,11 +56,7 @@ function logToFile(level, message, details = null) {
   }
 
   // Append to log file
-  fs.appendFile(logFilePath, logLine, (err) => {
-    if (err) {
-      console.error('❌ Failed to write to log file:', err);
-    }
-  });
+  logStream.write(logLine);
 }
 
 /* ── Config ───────────────────────────────────────────── */
@@ -105,6 +102,11 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
+  if (!origin && !allowedOrigins.includes('*')) {
+    logToFile('WARN', 'CORS Blocked: missing origin header');
+    return res.status(403).json({ error: 'CORS: missing origin header' });
+  }
+
   if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
     next();
   } else {
@@ -142,7 +144,25 @@ app.get('/health', (_req, res) => {
 /* ── Main forge endpoint ──────────────────────────────── */
 
 app.post('/v1/forge', async (req, res) => {
+  logToFile('INFO', 'Calling NVIDIA NIM API', { resolvedModel: req.body.model, language: req.body.language });
   try {
+
+    const nimResponse = await fetch(NVIDIA_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${NVIDIA_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: resolvedModel,
+      messages,
+      temperature: 0.3,
+      max_tokens: 4096,
+    }),
+    // 15 seconds ka explicit timeout limit set karein
+    signal: AbortSignal.timeout(15000) 
+  });
+
     const { model, language, instructions } = req.body;
 
     logToFile('INFO', 'Generation request received', {
@@ -200,7 +220,7 @@ app.post('/v1/forge', async (req, res) => {
     ]
 
     /* ── Call NVIDIA NIM ──────────────────────────── */
-    logToFile('INFO', 'Calling NVIDIA NIM API', { resolvedModel });
+    logToFile('INFO', 'Calling NVIDIA NIM API', { resolvedModel, language });
     const nimResponse = await fetch(NVIDIA_ENDPOINT, {
       method: 'POST',
       headers: {
@@ -244,9 +264,12 @@ app.post('/v1/forge', async (req, res) => {
     /* ── Respond ──────────────────────────────────── */
     return res.json({ code: cleanCode });
 
-  } catch (err) {
-    logToFile('ERROR', 'Unexpected server error during generation', { error: err.message, stack: err.stack });
-    return res.status(500).json({ error: 'Internal server error.' });
+  } catch (fetchErr) {
+    if (fetchErr.name === 'TimeoutError') {
+      logToFile('ERROR', 'Request to NVIDIA NIM API timed out', { error: fetchErr.message, stack: fetchErr.stack });
+      return res.status(504).json({ error: 'Request timeout.' });
+    }
+    throw fetchErr; // Let the global error handler catch it
   }
 });
 
@@ -268,19 +291,14 @@ function stripMarkdownFences(raw) {
   let code = raw.trim();
 
   /* Match triple-backtick or triple-tilde fences with optional language tag */
-  const fenceRegex = /^(```|~~~)\s*\w*\s*\n([\s\S]*?)\n\1\s*$/;
-  const match = code.match(fenceRegex);
+  const globalFenceRegex = /(```|~~~)\w*\s*\n([\s\S]*?)\n\1/;
+  const match = code.match(globalFenceRegex);
 
-  if (match) {
-    code = match[2];
-  } else {
-    /* Fallback: strip leading/trailing fences even if mismatched */
-    code = code
-      .replace(/^(```|~~~)\s*\w*\s*\n/, '')
-      .replace(/\n(```|~~~)\s*$/, '');
+  if (match && match[2]) {
+    return match[2].trim();
   }
 
-  return code.trim();
+  return code.replace(/(^```[\s\S]*?```$)|(^~~~[\s\S]*?~~~$)/, '').replace(/(^```$)|(^~~~$)/g, '').replace(/^(```|~~~)\s*\w*\s*\n/, '').replace(/\n(```|~~~)\s*$/, '').trim();
 }
 
 /* ── 404 catch-all ────────────────────────────────────── */
@@ -291,8 +309,11 @@ app.use((_req, res) => {
 
 /* ── Global error handler ─────────────────────────────── */
 
-app.use((err, _req, res, _next) => {
+app.use((err, req, res, next) => {
   logToFile('ERROR', 'Unhandled Express error', { error: err.message, stack: err.stack });
+  if(res.headersSent) {
+    return next(err);
+  }
   res.status(500).json({ error: 'Internal server error.' });
 });
 

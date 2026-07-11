@@ -1059,3 +1059,13 @@ body::before {
     /* transition-duration:0.01ms !important; */
   }
 }
+
+.csel-dropdown-panel {
+  position: fixed;
+  z-index: 99999 !important; /* Taaki textarea ya suggestions iske upar na aaye */
+  max-height: 200px; /* Window limits ke andar rakhne ke liye */
+  overflow-y: auto; /* Scrollbar support agar options zyada hain */
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

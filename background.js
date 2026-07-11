@@ -18,7 +18,21 @@ importScripts('config.js');
 let isGenerating = false;
 
 /* ── Message router ──────────────────────────────────── */
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, message, sender, sendResponse) => {
+  if (request.action === 'FORGE_CODE') {
+
+    // Asynchronous flow handle karne ke liye return true mandatory hai
+    handleForgeRequest(request)
+      .then((res) => {
+        // Safe send: Check karein ki channel open hai ya nahi
+        try { sendResponse({ success: true, data: res }); } catch (e) { }
+      })
+      .catch((err) => {
+        try { sendResponse({ success: false, error: err.message }); } catch (e) { }
+      });
+
+    return true; // Channel open rakhta hai
+  }
   if (message.action === 'FORGE_CODE') {
     handleForgeRequest(message.payload, sendResponse);
     return true; // keep the message channel open for async response

@@ -12,45 +12,79 @@
   'use strict';
 
   /* ── DOM refs ──────────────────────────────────────────── */
-  const modelSelect    = document.getElementById('model-select');
+  const modelSelect = document.getElementById('model-select');
   const languageSelect = document.getElementById('language-select');
   const instructionsEl = document.getElementById('instructions');
-  const charCounter    = document.getElementById('char-counter');
-  const forgeBtn       = document.getElementById('btn');
-  const statusInner    = document.getElementById('status-bar-inner');
-  const forgeProgress  = document.getElementById('forge-progress');
-  const connectionDot  = document.getElementById('connection-dot');
+  const charCounter = document.getElementById('char-counter');
+  const forgeBtn = document.getElementById('btn');
+  const statusInner = document.getElementById('status-bar-inner');
+  const forgeProgress = document.getElementById('forge-progress');
+  const connectionDot = document.getElementById('connection-dot');
 
   /* Custom select display elements */
-  const modelDot       = document.getElementById('model-dot');
-  const modelValue     = document.getElementById('model-value');
-  const languageValue  = document.getElementById('language-value');
+  const modelDot = document.getElementById('model-dot');
+  const modelValue = document.getElementById('model-value');
+  const languageValue = document.getElementById('language-value');
 
   /* Info sheet */
-  const infoSheet      = document.getElementById('info-sheet');
-  const infoBackdrop   = document.getElementById('info-backdrop');
+  const infoSheet = document.getElementById('info-sheet');
+  const infoBackdrop = document.getElementById('info-backdrop');
   const infoSheetTitle = document.getElementById('info-sheet-title');
-  const infoCloseBtn   = document.getElementById('info-sheet-close');
-  const contentAbout   = document.getElementById('content-about');
+  const infoCloseBtn = document.getElementById('info-sheet-close');
+  const contentAbout = document.getElementById('content-about');
   const contentCredits = document.getElementById('content-credits');
-  const btnAbout       = document.getElementById('btn-about');
-  const btnCredits     = document.getElementById('btn-credits');
+  const btnAbout = document.getElementById('btn-about');
+  const btnCredits = document.getElementById('btn-credits');
+  const textarea = document.getElementById('instructions');
+  const counter = document.getElementById('char-counter');
 
-  const MAX_CHARS  = 2000;
+  const MAX_CHARS = 2000;
   const NEAR_LIMIT = 1600;
 
   /* Model color map for the dot indicator */
   const MODEL_COLORS = {
-    'llama-3.3-70b-instruct':     'llama-3.3-70b-instruct',
-    'llama-3.1-70b-instruct':     'llama-3.1-70b-instruct',
-    'llama-3.1-8b-instruct':      'llama-3.1-8b-instruct',
-    'llama-3.2-3b-instruct':      'llama-3.2-3b-instruct',
-    'llama-3.2-1b-instruct':      'llama-3.2-1b-instruct',
-    'phi-4-mini-instruct':        'phi-4-mini-instruct',
-    'gemma-2-2b-it':              'gemma-2-2b-it',
+    'llama-3.3-70b-instruct': 'llama-3.3-70b-instruct',
+    'llama-3.1-70b-instruct': 'llama-3.1-70b-instruct',
+    'llama-3.1-8b-instruct': 'llama-3.1-8b-instruct',
+    'llama-3.2-3b-instruct': 'llama-3.2-3b-instruct',
+    'llama-3.2-1b-instruct': 'llama-3.2-1b-instruct',
+    'phi-4-mini-instruct': 'phi-4-mini-instruct',
+    'gemma-2-2b-it': 'gemma-2-2b-it',
     'mixtral-8x7b-instruct-v0.1': 'mixtral-8x7b-instruct-v0.1',
   };
 
+  textarea.addEventListener('input', () => {
+    let len = textarea.value.length;
+    if (len > 2000) {
+      textarea.value = textarea.value.substring(0, 2000);
+      len = 2000;
+    }
+    counter.textContent = `${len} / 2000`;
+  });
+
+  function triggerForgeGeneration() {
+    setLoadingState(true); // UI animation active
+
+    chrome.runtime.sendMessage({
+      action: 'FORGE_CODE',
+      model: selectedModel,
+      language: selectedLang,
+      instructions: textInput.value
+    }, (response) => {
+
+      // Handle failures cleanly
+      if (chrome.runtime.lastError || !response || !response.success) {
+        const errMsg = response?.error || chrome.runtime.lastError?.message || "Server Error";
+        showToastNotification(errMsg, "error"); // Visual feedback to user
+        setLoadingState(false); // Reset animations and enable buttons
+        return;
+      }
+
+      // Success flow
+      showToastNotification("Code Forged successfully!", "success");[cite: 4]
+      setLoadingState(false);
+    });
+  }
   /* ─────────────────────────────────────────────────────────
      DROPDOWN POPULATION + CUSTOM DISPLAY SYNC
   ────────────────────────────────────────────────────────── */
@@ -203,7 +237,7 @@
         svg.setAttribute('stroke-width', '3');
         svg.setAttribute('stroke-linecap', 'round');
         svg.setAttribute('stroke-linejoin', 'round');
-        
+
         const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
         polyline.setAttribute('points', '20 6 9 17 4 12');
         svg.appendChild(polyline);
@@ -266,7 +300,7 @@
     const len = instructionsEl.value.length;
     charCounter.textContent = `${len} / ${MAX_CHARS}`;
     charCounter.classList.toggle('near-limit', len >= NEAR_LIMIT && len < MAX_CHARS);
-    charCounter.classList.toggle('at-limit',   len >= MAX_CHARS);
+    charCounter.classList.toggle('at-limit', len >= MAX_CHARS);
   }
   instructionsEl.addEventListener('input', updateCharCounter);
 
@@ -299,11 +333,11 @@
     /* Set title & show correct content pane */
     if (type === 'about') {
       infoSheetTitle.textContent = 'About CodeForge AI';
-      contentAbout.style.display   = 'flex';
+      contentAbout.style.display = 'flex';
       contentCredits.style.display = 'none';
     } else {
       infoSheetTitle.textContent = 'Credits';
-      contentAbout.style.display   = 'none';
+      contentAbout.style.display = 'none';
       contentCredits.style.display = 'flex';
     }
 
@@ -320,7 +354,7 @@
     infoBackdrop.classList.remove('active');
   }
 
-  btnAbout.addEventListener('click',   () => openSheet('about'));
+  btnAbout.addEventListener('click', () => openSheet('about'));
   btnCredits.addEventListener('click', () => openSheet('credits'));
   infoCloseBtn.addEventListener('click', closeSheet);
   infoBackdrop.addEventListener('click', closeSheet);
@@ -361,7 +395,7 @@
     el.style.opacity = '0'; el.style.transform = 'translateY(5px)';
     requestAnimationFrame(() => {
       el.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
-      el.style.opacity    = '1'; el.style.transform = 'translateY(0)';
+      el.style.opacity = '1'; el.style.transform = 'translateY(0)';
     });
   }
 
@@ -374,7 +408,7 @@
   ────────────────────────────────────────────────────────── */
   function setDotState(state) {
     connectionDot.classList.remove('error', 'offline');
-    if (state === 'error')   connectionDot.classList.add('error');
+    if (state === 'error') connectionDot.classList.add('error');
     if (state === 'offline') connectionDot.classList.add('offline');
   }
 
@@ -446,7 +480,7 @@
       return;
     }
 
-    const model    = modelSelect.value;
+    const model = modelSelect.value;
     const language = languageSelect.value;
 
     setLoading(true);
