@@ -220,20 +220,20 @@ app.post('/v1/forge', async (req, res) => {
     ]
 
     /* ── Call NVIDIA NIM ──────────────────────────── */
-    logToFile('INFO', 'Calling NVIDIA NIM API', { resolvedModel, language });
-    const nimResponse = await fetch(NVIDIA_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${NVIDIA_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: resolvedModel,
-        messages,
-        temperature: 0.3,
-        max_tokens: 4096,
-      }),
-    });
+    // logToFile('INFO', 'Calling NVIDIA NIM API', { resolvedModel, language });
+    // const nimResponse = await fetch(NVIDIA_ENDPOINT, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     'Authorization': `Bearer ${NVIDIA_API_KEY}`,
+    //   },
+    //   body: JSON.stringify({
+    //     model: resolvedModel,
+    //     messages,
+    //     temperature: 0.3,
+    //     max_tokens: 4096,
+    //   }),
+    // });
 
     if (!nimResponse.ok) {
       const errText = await nimResponse.text().catch(() => 'Unknown upstream error');
